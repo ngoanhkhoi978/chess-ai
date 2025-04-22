@@ -9,36 +9,40 @@ const App = () => {
     const [game, setGame] = useState(new ChessGame());
     const [fen, setFen] = useState('start');
     const [status, setStatus] = useState('Your move!');
-    const [depth, setDepth] = useState(3); // State cho độ sâu, mặc định là 3
+    const [depth, setDepth] = useState(3);
+    const [moveSquares, setMoveSquares] = useState({});
+    const [highlightSquare, setHighlightSquare] = useState(null);
 
-    const onDrop = (sourceSquare, targetSquare, piece) => {
-        console.log('onDrop called:', { sourceSquare, targetSquare, piece });
+    const updateBoard = () => {
+        setFen(game.getFen());
+        highlightCheckSquare();
+    };
+
+    const onDrop = (sourceSquare, targetSquare) => {
         const move = game.move({
             from: sourceSquare,
             to: targetSquare,
             promotion: 'q',
         });
 
-        if (move === null) {
-            console.log('Invalid move');
-            return false;
-        }
+        if (move === null) return false;
 
-        setFen(game.getFen());
+        updateBoard();
         setStatus('Thinking...');
+        setMoveSquares({});
 
         setTimeout(() => {
             makeAIMove();
         }, 1000);
+
         return true;
     };
 
     const makeAIMove = () => {
-        const bestMove = getBestMove(game, depth); // Sử dụng depth từ state
-        console.log('Best move:', bestMove);
+        const bestMove = getBestMove(game, depth);
         if (bestMove) {
             game.move(bestMove);
-            setFen(game.getFen());
+            updateBoard();
             setStatus('Your move!');
         }
 
@@ -47,28 +51,89 @@ const App = () => {
         }
     };
 
+    const highlightCheckSquare = () => {
+        const board = game.getBoard();
+        const inCheck = game.game.in_check();
+        const kingColor = game.game.turn(); // turn() trả về quân đang chơi: 'w' or 'b'
+
+        if (!inCheck) {
+            setHighlightSquare(null);
+            return;
+        }
+
+        // Tìm ô vua
+        for (let row of board) {
+            for (let piece of row) {
+                if (piece && piece.type === 'k' && piece.color === kingColor) {
+                    setHighlightSquare(piece.square);
+                    return;
+                }
+            }
+        }
+    };
+
     const resetGame = () => {
         const newGame = new ChessGame();
         setGame(newGame);
         setFen('start');
         setStatus('Your move!');
+        setMoveSquares({});
+        setHighlightSquare(null);
     };
 
     const handleDepthChange = (e) => {
         const value = parseInt(e.target.value);
         if (!isNaN(value) && value >= 1 && value <= 5) {
-            // Giới hạn depth từ 1-5
             setDepth(value);
         }
     };
 
+    const onSquareClick = (square) => {
+        const moves = game.getMoves({ square, verbose: true });
+
+        if (moves.length === 0) {
+            setMoveSquares({});
+            return;
+        }
+
+        const highlights = {};
+        moves.forEach((move) => {
+            highlights[move.to] = {
+                background: 'radial-gradient(circle, rgba(0, 0, 0, 0.8) 5%, transparent 30%)',
+                borderRadius: '50%',
+            };
+        });
+
+        setMoveSquares(highlights);
+    };
+
+    const getCustomSquareStyles = () => {
+        const styles = { ...moveSquares };
+
+        if (highlightSquare) {
+            styles[highlightSquare] = {
+                background: 'radial-gradient(circle, rgba(201, 202, 178, 0.8) 15%, transparent 16%)',
+                borderRadius: '50%',
+            };
+        }
+
+        return styles;
+    };
+
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
             <h1 className="text-5xl font-bold mb-4">Chess AI Demo</h1>
             <img src={status === 'Thinking...' ? botThinking : bot} alt="" className="size-32" />
             <p className="text-lg mb-4">{status}</p>
             <div>
-                <Chessboard position={fen} onPieceDrop={onDrop} boardWidth={500} />
+                <Chessboard
+                    position={fen}
+                    onPieceDrop={onDrop}
+                    onSquareClick={onSquareClick}
+                    onPieceDragBegin={(piece, square) => onSquareClick(square)}
+                    boardWidth={500}
+                    customSquareStyles={getCustomSquareStyles()}
+                />
             </div>
             <div className="mt-4 flex items-center space-x-4">
                 <button onClick={resetGame} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">

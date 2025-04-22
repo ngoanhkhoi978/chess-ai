@@ -36,4 +36,8 @@ export class ChessGame {
     getBoard() {
         return this.game.board();
     }
+
+    getMoves(options) {
+        return this.game.moves(options);
+    }
 }
