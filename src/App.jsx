@@ -54,7 +54,7 @@ const App = () => {
     const highlightCheckSquare = () => {
         const board = game.getBoard();
         const inCheck = game.game.in_check();
-        const kingColor = game.game.turn(); // turn() trả về quân đang chơi: 'w' or 'b'
+        const kingColor = game.game.turn();
 
         if (!inCheck) {
             setHighlightSquare(null);
@@ -112,8 +112,7 @@ const App = () => {
 
         if (highlightSquare) {
             styles[highlightSquare] = {
-                background: 'radial-gradient(circle, rgba(201, 202, 178, 0.8) 15%, transparent 16%)',
-                borderRadius: '50%',
+                background: 'rgba(255, 0, 0, 0.5)',
             };
         }
 
