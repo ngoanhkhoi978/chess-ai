@@ -12,6 +12,7 @@ const App = () => {
     const [depth, setDepth] = useState(3);
     const [moveSquares, setMoveSquares] = useState({});
     const [highlightSquare, setHighlightSquare] = useState(null);
+    const [moveHistory, setMoveHistory] = useState([]);
 
     const updateBoard = () => {
         setFen(game.getFen());
@@ -27,6 +28,7 @@ const App = () => {
 
         if (move === null) return false;
 
+        setMoveHistory((prev) => [...prev, move.san]);
         updateBoard();
         setStatus('Thinking...');
         setMoveSquares({});
@@ -42,6 +44,8 @@ const App = () => {
         const bestMove = getBestMove(game, depth);
         if (bestMove) {
             game.move(bestMove);
+            setMoveHistory((prev) => [...prev, bestMove]);
+            console.log(bestMove);
             updateBoard();
             setStatus('Your move!');
         }
@@ -61,7 +65,6 @@ const App = () => {
             return;
         }
 
-        // Tìm ô vua
         for (let row of board) {
             for (let piece of row) {
                 if (piece && piece.type === 'k' && piece.color === kingColor) {
@@ -79,6 +82,7 @@ const App = () => {
         setStatus('Your move!');
         setMoveSquares({});
         setHighlightSquare(null);
+        setMoveHistory([]); // ✅ Reset lịch sử
     };
 
     const handleDepthChange = (e) => {
@@ -112,7 +116,7 @@ const App = () => {
 
         if (highlightSquare) {
             styles[highlightSquare] = {
-                background: 'rgba(255, 0, 0, 0.5)',
+                background: 'rgba(255, 0, 0, 0.5)', // ✅ Ô bị chiếu tô đỏ
             };
         }
 
@@ -124,17 +128,33 @@ const App = () => {
             <h1 className="text-5xl font-bold mb-4">Chess AI Demo</h1>
             <img src={status === 'Thinking...' ? botThinking : bot} alt="" className="size-32" />
             <p className="text-lg mb-4">{status}</p>
-            <div>
-                <Chessboard
-                    position={fen}
-                    onPieceDrop={onDrop}
-                    onSquareClick={onSquareClick}
-                    onPieceDragBegin={(piece, square) => onSquareClick(square)}
-                    boardWidth={500}
-                    customSquareStyles={getCustomSquareStyles()}
-                />
+
+            <div className="flex mt-4 space-x-8">
+                <div>
+                    <Chessboard
+                        position={fen}
+                        onPieceDrop={onDrop}
+                        onSquareClick={onSquareClick}
+                        onPieceDragBegin={(piece, square) => onSquareClick(square)}
+                        boardWidth={500}
+                        customSquareStyles={getCustomSquareStyles()}
+                    />
+                </div>
+                <div className="w-40 border p-2 rounded shadow bg-white">
+                    <h2 className="font-semibold text-lg mb-2">Move History</h2>
+                    <ol className="list-decimal pl-4 space-y-1 text-sm">
+                        {Array.from({ length: Math.ceil(moveHistory.length / 2) }, (_, i) => (
+                            <li key={i}>
+                                <span className="text-blue-600">{moveHistory[i * 2] || ''}</span>
+                                {' - '}
+                                <span className="text-red-600">{moveHistory[i * 2 + 1] || ''}</span>
+                            </li>
+                        ))}
+                    </ol>
+                </div>
             </div>
-            <div className="mt-4 flex items-center space-x-4">
+
+            <div className="mt-6 flex items-center space-x-4">
                 <button onClick={resetGame} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                     New Game
                 </button>
