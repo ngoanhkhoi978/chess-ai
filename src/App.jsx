@@ -121,7 +121,7 @@ const App = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+        <div className="flex flex-col items-center justify-center min-h-screen">
             <h1 className="text-5xl font-bold mb-4">Chess AI Demo</h1>
             <img src={status === 'Thinking...' ? botThinking : bot} alt="" className="size-32" />
             <p className="text-lg mb-4">{status}</p>
