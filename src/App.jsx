@@ -140,7 +140,7 @@ const App = () => {
                         customSquareStyles={getCustomSquareStyles()}
                     />
                 </div>
-                <div className="w-40 border p-2 rounded shadow bg-white">
+                <div className="w-40 border p-2 rounded shadow bg-white max-h-[500px] overflow-y-auto">
                     <h2 className="font-semibold text-lg mb-2">Move History</h2>
                     <ol className="list-decimal pl-4 space-y-1 text-sm">
                         {Array.from({ length: Math.ceil(moveHistory.length / 2) }, (_, i) => (
